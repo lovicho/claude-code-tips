@@ -17,8 +17,6 @@ tmux send-keys -t <session_name> 'gemini -m gemini-3-pro-preview' Enter
 sleep 3  # wait for Gemini CLI to load
 ```
 
-If the model errors out, kill the session and retry without the `-m` flag (just `gemini` with no model argument).
-
 ## Send query and capture output
 
 ```bash
@@ -26,6 +24,8 @@ tmux send-keys -t <session_name> 'Your Reddit query here' Enter
 sleep 30  # wait for response (adjust as needed, up to 90s for complex searches)
 tmux capture-pane -t <session_name> -p -S -500  # capture output
 ```
+
+If the captured output shows an API error (e.g., quota exceeded, model unavailable), kill the session and retry without the `-m` flag (just `gemini` with no model argument). This falls back to the default model.
 
 ## How to tell if Enter was sent
 
