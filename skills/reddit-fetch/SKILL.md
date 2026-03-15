@@ -17,6 +17,8 @@ tmux send-keys -t <session_name> 'gemini -m gemini-3-pro-preview' Enter
 sleep 3  # wait for Gemini CLI to load
 ```
 
+If the model errors out, kill the session and retry without the `-m` flag (just `gemini` with no model argument).
+
 ## Send query and capture output
 
 ```bash
