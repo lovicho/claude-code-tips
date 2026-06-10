@@ -49,7 +49,7 @@ echo ""
 
 echo -e "${YELLOW}SETTINGS (~/.claude/settings.json):${NC}"
 echo "  3. Status line - shows model, git branch, uncommitted files, token usage at bottom of screen"
-echo "  4. Disable auto-updates - prevents Claude Code from auto-updating (useful for system prompt patches)"
+echo "  4. Disable auto-updates - prevents Claude Code from auto-updating"
 echo "  5. Lazy-load MCP tools - only loads MCP tool definitions when needed, saves context"
 echo "  6. Read(~/.claude) permission - allows clone/half-clone commands to read conversation history"
 echo "  7. Read(//tmp/**) permission - allows reading temporary files without prompts"
@@ -289,14 +289,6 @@ fi
 echo ""
 echo -e "${YELLOW}=== Suggestions ===${NC}"
 echo ""
-
-# Gemini CLI
-if command -v gemini &> /dev/null; then
-    echo -e "${GREEN}[Already installed]${NC} Gemini CLI"
-else
-    echo -e "${BLUE}[Optional]${NC} Gemini CLI - needed for reddit-fetch skill to work"
-    echo "           Install: https://github.com/google-gemini/gemini-cli"
-fi
 
 # Playwright MCP
 if claude mcp list 2>/dev/null | grep -q "playwright"; then
