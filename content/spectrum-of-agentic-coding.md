@@ -47,7 +47,7 @@ Even though this is still AI-assisted coding, the quality is indistinguishable f
   - AWS vs. Google Cloud vs. Render?
   - The best way to run a local transcription model on Mac?
 
-  You use tools like deep research or Claude Code with web search and [Reddit fetch](https://github.com/ykdojo/claude-code-tips?tab=readme-ov-file#tip-11-use-gemini-cli-as-a-fallback-for-blocked-sites) to do the research, but also check the sources if necessary.
+  You use tools like deep research or Claude Code with web search and [Reddit fetch](https://github.com/ykdojo/claude-code-tips/tree/main/skills/reddit-fetch) to do the research, but also check the sources if necessary.
 - **AI-powered quality control**: In addition to everything we've discussed so far, you may also have things like [background Claude Code jobs testing your CLI](https://github.com/ykdojo/claude-code-tips?tab=readme-ov-file#tip-9-complete-the-write-test-cycle-for-autonomous-tasks) if you're creating a CLI, or [AI with browser access testing your UI](https://github.com/ykdojo/claude-code-tips?tab=readme-ov-file#creative-testing-strategies) if you're working on a web app. In addition, you might have things like multi-platform testing (Windows, Linux, Mac), security and performance checks, and so on.
 - **Accelerated learning**: Instead of just letting AI write code, you ask questions like "Why did you write it this way?" or "What does this particular line mean?" Essentially, you use AI to deepen your domain expertise instead of letting it handle everything.
 

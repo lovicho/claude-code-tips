@@ -290,14 +290,6 @@ echo ""
 echo -e "${YELLOW}=== Suggestions ===${NC}"
 echo ""
 
-# Gemini CLI
-if command -v gemini &> /dev/null; then
-    echo -e "${GREEN}[Already installed]${NC} Gemini CLI"
-else
-    echo -e "${BLUE}[Optional]${NC} Gemini CLI - needed for reddit-fetch skill to work"
-    echo "           Install: https://github.com/google-gemini/gemini-cli"
-fi
-
 # Playwright MCP
 if claude mcp list 2>/dev/null | grep -q "playwright"; then
     echo -e "${GREEN}[Already installed]${NC} Playwright MCP"
