@@ -450,6 +450,66 @@ test_progress_with_nested_user_type() {
     fi
 }
 
+# Test 12: Trailing session-config lines (last-prompt/ai-title/mode/permission-mode)
+# should be stripped. Recent Claude Code appends these at the end of every
+# conversation; last-prompt carries a leafUuid that the script does not remap,
+# so copying it through leaves a dangling pointer that breaks resume.
+test_session_config_lines_stripped() {
+    log_test "Trailing session-config lines should be stripped from the clone"
+
+    local session_id
+    session_id=$(uuidgen | tr '[:upper:]' '[:lower:]')
+    local conv_file="${TEST_PROJECTS_DIR}/${TEST_PROJECT_DIRNAME}/${session_id}.jsonl"
+
+    local uuid1 uuid2 uuid3 uuid4 uuid5
+    uuid1=$(uuidgen | tr '[:upper:]' '[:lower:]')
+    uuid2=$(uuidgen | tr '[:upper:]' '[:lower:]')
+    uuid3=$(uuidgen | tr '[:upper:]' '[:lower:]')
+    uuid4=$(uuidgen | tr '[:upper:]' '[:lower:]')
+    uuid5=$(uuidgen | tr '[:upper:]' '[:lower:]')
+
+    # 4 real messages (2 clean user) + trailing session-config lines.
+    # last-prompt's leafUuid points at uuid5 (the system line), mimicking the
+    # real format. After half-clone these config lines must be gone.
+    {
+        generate_message "$uuid1" "null" "$session_id" "user" "Question 1"
+        generate_message "$uuid2" "$uuid1" "$session_id" "assistant" "Answer 1"
+        generate_message "$uuid3" "$uuid2" "$session_id" "user" "Question 2"
+        generate_message "$uuid4" "$uuid3" "$session_id" "assistant" "Answer 2"
+        echo "{\"type\":\"system\",\"subtype\":\"turn_duration\",\"parentUuid\":\"${uuid4}\",\"sessionId\":\"${session_id}\",\"uuid\":\"${uuid5}\",\"isMeta\":false,\"timestamp\":\"2025-01-01T00:00:00.000Z\"}"
+        echo "{\"type\":\"last-prompt\",\"lastPrompt\":\"Question 2\",\"leafUuid\":\"${uuid5}\",\"sessionId\":\"${session_id}\"}"
+        echo "{\"type\":\"ai-title\",\"title\":\"Some title\",\"sessionId\":\"${session_id}\"}"
+        echo "{\"type\":\"mode\",\"mode\":\"default\",\"sessionId\":\"${session_id}\"}"
+        echo "{\"type\":\"permission-mode\",\"permissionMode\":\"default\",\"sessionId\":\"${session_id}\"}"
+    } > "$conv_file"
+
+    local output
+    output=$(run_half_clone "$session_id")
+
+    local new_session
+    new_session=$(get_new_session_from_output "$output")
+    local new_file="${TEST_PROJECTS_DIR}/${TEST_PROJECT_DIRNAME}/${new_session}.jsonl"
+
+    local cfg_count
+    cfg_count=$(grep -cE '"type":"(last-prompt|ai-title|mode|permission-mode)"' "$new_file" 2>/dev/null || true)
+    cfg_count=${cfg_count:-0}
+
+    if [ "$cfg_count" -ne 0 ]; then
+        log_fail "Found $cfg_count session-config lines in clone (expected 0)"
+        return
+    fi
+
+    # The appended reference message must point at a uuid that exists in the file
+    # (not a dangling leafUuid). Check the last line's parentUuid is present.
+    local ref_parent
+    ref_parent=$(tail -1 "$new_file" | grep -oE '"parentUuid":"[a-f0-9-]+"' | head -1 | sed 's/.*"://;s/"//g')
+    if [ -n "$ref_parent" ] && grep -q "\"uuid\":\"${ref_parent}\"" "$new_file"; then
+        log_pass "Config lines stripped and reference message has a valid parent"
+    else
+        log_fail "Reference message parent ($ref_parent) is dangling - not found as a uuid in the clone"
+    fi
+}
+
 # Main
 main() {
     echo "================================"
@@ -476,6 +536,7 @@ main() {
     test_double_tagging
     test_thinking_blocks_stripped
     test_progress_with_nested_user_type
+    test_session_config_lines_stripped
 
     echo ""
     echo "================================"
