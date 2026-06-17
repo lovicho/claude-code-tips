@@ -403,6 +403,13 @@ half_clone_conversation() {
     stop_at_line > 0 && NR >= stop_at_line { exit }
     /^$/ { next }
 
+    # Skip trailing session-config/pointer lines (added by recent Claude Code at
+    # the end of every conversation). These are session-scoped: "last-prompt"
+    # carries a "leafUuid" that points to the resume tip, but the awk below only
+    # remaps uuid/parentUuid/messageId - NOT leafUuid - so a copied last-prompt
+    # would dangle and break resume (conversation shows empty). Drop them.
+    get_top_type($0) ~ /^(last-prompt|ai-title|mode|permission-mode)$/ { next }
+
     {
         line = $0
 
@@ -472,10 +479,12 @@ half_clone_conversation() {
     ' "$source_file" >> "$target_file"
 
 
-    # Append a reference message linking back to the original conversation
-    # Find the last uuid in the cloned file (could be "uuid" or "leafUuid")
+    # Append a reference message linking back to the original conversation.
+    # Find the last real message uuid in the cloned file. Match only "uuid"
+    # (NOT "leafUuid" - that's a session pointer, not an actual message node, so
+    # parenting the reference to it would orphan the message and break resume).
     local last_uuid
-    last_uuid=$(tail -5 "$target_file" | grep -oE '"(uuid|leafUuid)":"[a-f0-9-]+"' | tail -1 | sed 's/.*"://;s/"//g' || true)
+    last_uuid=$(tail -5 "$target_file" | grep -oE '"uuid":"[a-f0-9-]+"' | tail -1 | sed 's/.*"://;s/"//g' || true)
     if [ -z "$last_uuid" ]; then
         last_uuid=$(generate_uuid)
     fi
@@ -496,16 +505,19 @@ half_clone_conversation() {
     # Update history.jsonl
     log_info "Updating history file..."
 
-    # Get display text from first clean user message in the KEPT portion
+    # Get display text from first clean user message in the KEPT portion.
+    # Scan ALL kept clean user messages (not just head -1) for the first one with
+    # text content: the first line can be a "queue-operation" with no content
+    # field, which would otherwise fall back to the generic label.
     local display_text
-    display_text=$(tail -n +"$((skip_count + 1))" "$source_file" | filter_clean_user_msgs | head -1 | \
+    display_text=$(tail -n +"$((skip_count + 1))" "$source_file" | filter_clean_user_msgs | \
         grep -oE '"content":"[^"]*"' | head -1 | \
         LC_ALL=C sed 's/"content":"//;s/"$//' | \
         head -c 200 || echo "[Half-cloned conversation]")
 
     if [ -z "$display_text" ]; then
         # Try array format
-        display_text=$(tail -n +"$((skip_count + 1))" "$source_file" | filter_clean_user_msgs | head -1 | \
+        display_text=$(tail -n +"$((skip_count + 1))" "$source_file" | filter_clean_user_msgs | \
             grep -oE '"text":"[^"]*"' | head -1 | \
             LC_ALL=C sed 's/"text":"//;s/"$//' | \
             head -c 200 || echo "[Half-cloned conversation]")
