@@ -12,36 +12,15 @@
 
 # Behavior
 
+Respond concisely. Get to the point, skip preamble and filler.
+
+Double-check before claiming something as fact. Don't state things confidently without a source - if you can't verify it, say so or go verify it first. Trust verified evidence over a single conflicting source.
+
 When I paste large content with no instructions, just summarize it.
 
-For a complex bash command, break it down into multiple simple commands so the user doesn't have to approve each one individually. Alternatively, put it in a bash script file and run it with `bash /tmp/<script>.sh`.
+# Git
 
-Example - instead of:
-```bash
-sleep 60 && ps aux | grep foo | wc -l && echo "---" && ls -la /some/path
-```
-
-Do this:
-```bash
-sleep 60
-```
-```bash
-ps aux | grep foo | wc -l
-```
-```bash
-ls -la /some/path
-```
-
-Also avoid complex pipes. Instead of:
-```bash
-grep "file: '" patch-cli.js | sed "s/.*file: '\([^']*\)'.*/\1/" | sort > /tmp/used.txt
-```
-
-Either run each step individually or put it in a script file and run with `bash /tmp/script.sh`.
-
-For git operations in other directories, use `cd <path> && git ...` instead of `git -C <path>`.
-
-Never use `2>&1` in bash commands. Keep stderr and stdout separate.
+- Run commit and push as **separate** commands, never chained (`git commit && git push`). Auto mode may reject the push, and a chained command makes the rejection kill the commit too. Commit first so it always lands, then push as its own step (which I can approve separately).
 
 # Publishing to npm
 
@@ -55,14 +34,6 @@ Reliable path - use a Classic Automation token (they bypass 2FA):
 Avoid Granular Access Tokens for this - they are fiddly: they error if org permissions are set without selecting an org (I have no orgs), and a brand-new unscoped package can't be individually selected, so it needs "All packages".
 
 Before publishing: `npm publish --dry-run` to confirm the file list, and gitignore generated artifacts so they don't ship.
-
-# Safety
-
-**NEVER use `--dangerously-skip-permissions` on the host machine.**
-
-For risky operations, use a Docker container. Inside containers, YOLO mode and `--dangerously-skip-permissions` are fine.
-
-Run `npx cc-safe <directory>` to scan Claude Code settings for security issues.
 
 ## Containers
 
