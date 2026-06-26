@@ -6,11 +6,11 @@ A while ago, I posted [32 Claude Code Tips: From Basics to Advanced](https://age
 
 The simplest way to get Claude's output out of the terminal. Just type `/copy` and it copies Claude's last response to your clipboard as markdown.
 
-## 2. `/fork` and `--fork-session`
+## 2. `/branch` and `--fork-session`
 
-Claude Code now has built-in conversation forking:
+Claude Code now has built-in conversation branching:
 
-- `/fork` - fork from within a conversation
+- `/branch` - branch from within a conversation
 - `--fork-session` - use with `--resume` or `--continue` (e.g., `claude -c --fork-session`)
 
 Since `--fork-session` has no short form, I created a shell function to use `--fs` as a shortcut. [You can see it here](https://github.com/ykdojo/claude-code-tips?tab=readme-ov-file#tip-21-clonefork-and-half-clone-conversations).
