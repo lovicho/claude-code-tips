@@ -1,6 +1,6 @@
-# 44 Claude Code Tips: From Basics to Advanced
+# 40+ Claude Code Tips: From Basics to Advanced
 
-Here are my tips for getting the most out of Claude Code, including a custom status line script and Claude Code running itself in a container. Also includes the [dx plugin](#tip-43-install-the-dx-plugin).
+Here are my tips for getting the most out of Claude Code, including a custom status line script and Claude Code running itself in a container. Also includes the [dx plugin](#tip-43-install-the-dx-plugin): skills for everyday dev workflows.
 
 📺 [Quick demo](https://www.youtube.com/watch?v=hiISl558JGE) - See some of these tips in action with a multi-Claude workflow and voice input:
 
@@ -549,7 +549,7 @@ I like to think of it like a billion token rule instead of the 10,000 hour rule.
 Sometimes you want to try a different approach from a specific point in a conversation without losing your original thread. The [clone-conversation script](scripts/clone-conversation.sh) lets you duplicate a conversation with new UUIDs so you can branch off.
 
 **Built-in alternatives (recent versions):** Claude Code now has native forking:
-- `/fork` - forks the current session from within a conversation
+- `/branch` - branches the current session from within a conversation
 - `--fork-session` - use with `--resume` or `--continue` (e.g., `claude -c --fork-session`)
 
 Since `--fork-session` has no short form, you can add this function to your `~/.zshrc` or `~/.bashrc` to use `--fs` as a shortcut:
