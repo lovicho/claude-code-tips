@@ -733,7 +733,7 @@ If you still want to be careful, you can always approve things manually without 
 
 Remote Control lets you drive Claude Code from your phone, which pairs really well with auto mode - you can kick something off, walk away, and check on it from anywhere. There are a couple of ways to use it.
 
-Run `/remote-control` inside an existing session, follow the instructions, and you can drive that same session from your phone. Because it's the same session, you can go back and forth between your phone and your computer.
+Run `/remote-control` inside an existing session, follow the instructions, and you can drive that same session from your phone. Because it's the same session, you can go back and forth between your phone and your computer. You can also use `/rc` for short.
 
 Or start a server with `claude remote-control --spawn=worktree --capacity=N`, which lets you start brand new sessions from your phone, not just attach to one you already have open. Here `--spawn=worktree` gives each new session its own git worktree so they don't step on each other, and `--capacity` sets how many can run at once. I have this [aliased](#tip-7-set-up-terminal-aliases-for-quick-access) to `cr`, so it's just `cr --spawn=worktree --capacity=N`.
 
