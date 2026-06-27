@@ -230,12 +230,15 @@ By default, Claude Code adds a `Co-Authored-By` trailer to commits and an attrib
 {
   "attribution": {
     "commit": "",
-    "pr": ""
+    "pr": "",
+    "sessionUrl": false
   }
 }
 ```
 
-Setting both to empty strings removes the attribution entirely. This replaces the older `includeCoAuthoredBy` setting, which is now deprecated.
+Setting `commit` and `pr` to empty strings removes the attribution text entirely. This replaces the older `includeCoAuthoredBy` setting, which is now deprecated.
+
+`sessionUrl` is a separate flag (default `true`): Claude Code also adds a `Claude-Session:` trailer to commits and a session link to PR bodies. Set it to `false` to turn that off.
 
 ## Tip 5: AI context is like milk; it's best served fresh and condensed!
 
