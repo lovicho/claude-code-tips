@@ -54,6 +54,7 @@ Here are my tips for getting the most out of Claude Code, including a custom sta
 - [Tip 42: Keep learning!](#tip-42-keep-learning)
 - [Tip 43: Install the dx plugin](#tip-43-install-the-dx-plugin)
 - [Tip 44: Quick setup script](#tip-44-quick-setup-script)
+- [Tip 45: Switch between multiple Claude accounts](#tip-45-switch-between-multiple-claude-accounts)
 
 <!-- /TOC -->
 
@@ -961,6 +962,29 @@ SHELL CONFIG (~/.zshrc or ~/.bashrc):
 
 Skip any? [e.g., 1 4 7 or Enter for all]:
 ```
+
+## Tip 45: Switch between multiple Claude accounts
+
+If you have multiple Claude accounts (for example, personal vs work), here's how you can switch between them quickly.
+
+On macOS your login lives in a single Keychain entry, but the `CLAUDE_CODE_OAUTH_TOKEN` env var overrides it, so you can launch as a specific account. The env var works on Linux and Windows too (their logins live in `~/.claude/.credentials.json` instead). Here's an example of how you can set this up on Mac - feel free to adapt it to your own system.
+
+Mint a one-year token per account (`claude setup-token` opens a browser - log into the account you want), then store each in the Keychain so it's not plaintext in your dotfiles:
+
+```bash
+claude setup-token   # log in as each account, copy the token
+security add-generic-password -s "claude-token-work"     -a "$USER" -U -w
+security add-generic-password -s "claude-token-personal" -a "$USER" -U -w
+```
+
+Add two functions to your `~/.zshrc` that look up the token and pass any args through to `claude`:
+
+```bash
+clw() { CLAUDE_CODE_OAUTH_TOKEN="$(security find-generic-password -s claude-token-work     -a "$USER" -w)" claude "$@"; }
+clp() { CLAUDE_CODE_OAUTH_TOKEN="$(security find-generic-password -s claude-token-personal -a "$USER" -w)" claude "$@"; }
+```
+
+Now `clw` and `clp` run as each account (e.g. `clw --resume`), while plain `claude` still uses your Keychain login. Tokens last about a year, so re-run `setup-token` to refresh.
 
 ---
 
