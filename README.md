@@ -28,7 +28,7 @@ Here are my tips for getting the most out of Claude Code, including a custom sta
 - [Tip 16: Claude Code as a writing assistant](#tip-16-claude-code-as-a-writing-assistant)
 - [Tip 17: Markdown is the s**t](#tip-17-markdown-is-the-st)
 - [Tip 18: Use Notion to preserve links when pasting](#tip-18-use-notion-to-preserve-links-when-pasting)
-- [Tip 19: Containers for long-running risky tasks](#tip-19-containers-for-long-running-risky-tasks)
+- [Tip 19: Isolated environments for long-running risky tasks](#tip-19-isolated-environments-for-long-running-risky-tasks)
 - [Tip 20: The best way to get better at using Claude Code is by using it](#tip-20-the-best-way-to-get-better-at-using-claude-code-is-by-using-it)
 - [Tip 21: Clone/fork and half-clone conversations](#tip-21-clonefork-and-half-clone-conversations)
 - [Tip 22: Use realpath to get absolute paths](#tip-22-use-realpath-to-get-absolute-paths)
@@ -515,13 +515,14 @@ A quick tip for this one: if you want to copy and paste markdown content into a 
 
 It turns out the reverse also works. If you have text with links from other places, let's say from Slack, you can copy it. If you paste it directly into Claude Code, it doesn't show the links. But if you put it in a Notion document first, then copy from there, you get it in markdown, which of course Claude Code can read.
 
-## Tip 19: Containers for long-running risky tasks
+## Tip 19: Isolated environments for long-running risky tasks
 
-Regular sessions are more for methodical work where you control the permissions you give and review output more carefully. Containerized environments are great for `--dangerously-skip-permissions` sessions where you don't have to give permission for each little thing. You can just let it run on its own for a while.
+Isolated environments are great for `--dangerously-skip-permissions` sessions where you don't have to give permission for each little thing. You can just let it run on its own for a while. This is useful for research or experimentation, things that take a long time and maybe could be risky.
 
-This is useful for research or experimentation, things that take a long time and maybe could be risky. A good example is a Reddit research workflow with the reddit-fetch skill. Running that unsupervised is risky on your main system, but in a container, if something goes wrong, it's contained.
+There are two major ways of going about it:
 
-I even created [SafeClaw](https://github.com/ykdojo/safeclaw) to make running containerized Claude Code sessions easy. It lets you spin up multiple isolated sessions, each with a web terminal, and manage them all from a dashboard. It uses several customizations from this repo, including the [DX plugin](#tip-43-install-the-dx-plugin) and [status line](#tip-0-customize-your-status-line).
+1. You can run it in a container. I even created [a preset environment](https://github.com/ykdojo/safeclaw) to make running containerized Claude Code sessions easy.
+2. You can take it a step further by [setting up a whole machine Claude Code can fully control](https://github.com/ykdojo/claude-controls-mac), computer use included.
 
 There's also auto mode, which is a sensible default in general - Claude runs autonomously while a classifier reviews each command and only stops for risky ones. But this still doesn't remove the risks and the need for approval entirely, so for tasks where you want it to have complete independence, you can still use a container.
 
@@ -731,7 +732,7 @@ Auto mode lets Claude decide whether a command is safe to run in context, instea
 
 The main thing it fixes is mindless approving. When a command is too long to read carefully, or you're getting tired, you end up approving things without really thinking about them. Auto mode takes that pressure off, so I think it's a good default.
 
-If you still want to be careful, you can always approve things manually without auto mode. And if you want to give it complete independence, you can [run Claude Code in a container with `--dangerously-skip-permissions`](#tip-19-containers-for-long-running-risky-tasks).
+If you still want to be careful, you can always approve things manually without auto mode. And if you want to give it complete independence, you can [run Claude Code in a container with `--dangerously-skip-permissions`](#tip-19-isolated-environments-for-long-running-risky-tasks).
 
 ## Tip 32: Control Claude Code from your phone
 
