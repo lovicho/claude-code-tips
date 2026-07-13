@@ -742,7 +742,7 @@ Run `/remote-control` inside an existing session, follow the instructions, and y
 
 Or start a server with `claude remote-control --spawn=worktree --capacity=N`, which lets you start brand new sessions from your phone, not just attach to one you already have open. Here `--spawn=worktree` gives each new session its own git worktree so they don't step on each other, and `--capacity` sets how many can run at once. I have this [aliased](#tip-7-set-up-terminal-aliases-for-quick-access) to `cr`, so it's just `cr --spawn=worktree --capacity=N`.
 
-Personally I prefer the `/rc` method, and I turn it off when I'm not using it. A potential attacker who gets access to your Claude Code session essentially has access to everything on your computer, so I'd rather be careful.
+Personally I prefer the `/rc` method, and I turn it off when I'm not using it. A potential attacker who gets access to your Claude Code session essentially has access to everything on your computer, so I'd rather be careful. The exception is when I have a totally [isolated environment](#tip-19-isolated-environments-for-long-running-risky-tasks) - then it's super convenient to be able to start a Claude Code session from anywhere from your phone, with access to your full dev environment.
 
 Docs: [Remote Control](https://code.claude.com/docs/en/remote-control).
 
