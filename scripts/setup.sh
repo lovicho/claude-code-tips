@@ -43,7 +43,7 @@ echo "The following will be configured:"
 echo ""
 
 echo -e "${YELLOW}INSTALLS:${NC}"
-echo "  1. DX plugin - slash commands (/dx:gha, /dx:clone, /dx:handoff) and skills (reddit-fetch)"
+echo "  1. DX plugin - slash commands (/dx:gha, /dx:handoff) and skills (reddit-fetch)"
 echo ""
 
 echo -e "${YELLOW}SETTINGS (~/.claude/settings.json):${NC}"
