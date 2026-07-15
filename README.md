@@ -648,7 +648,7 @@ Skills and slash commands are pretty similar in the way they function. The diffe
 
 **Plugins** are a way to package skills, slash commands, agents, hooks, and MCP servers together. But a plugin doesn't have to use all of them. Anthropic's official `frontend-design` plugin is essentially just a skill and nothing else. It could be distributed as a standalone skill, but the plugin format makes it easier to install.
 
-For example, I built a plugin called `dx` that bundles slash commands and a skill from this repo together. You can see how it works in the [Install the dx plugin](#tip-43-install-the-dx-plugin) section.
+For example, I built a plugin called `dx` that bundles slash commands and skills from this repo together. You can see how it works in the [Install the dx plugin](#tip-43-install-the-dx-plugin) section.
 
 ## Tip 24: Interactive PR reviews
 
@@ -935,7 +935,7 @@ SETTINGS (~/.claude/settings.json):
   2. Status line - shows model, git branch, uncommitted files, token usage at bottom of screen
   3. Disable auto-updates - prevents Claude Code from auto-updating
   4. Lazy-load MCP tools - only loads MCP tool definitions when needed, saves context
-  5. Read(~/.claude) permission - allows clone/half-clone commands to read conversation history
+  5. Read(~/.claude) permission - allows the half-clone command to read conversation history
   6. Read(//tmp/**) permission - allows reading temporary files without prompts
   7. Disable attribution - removes Co-Authored-By from commits and attribution from PRs
 
