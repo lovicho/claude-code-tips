@@ -30,7 +30,7 @@ Here are my tips for getting the most out of Claude Code, including a custom sta
 - [Tip 18: Use Notion to preserve links when pasting](#tip-18-use-notion-to-preserve-links-when-pasting)
 - [Tip 19: Isolated environments for long-running risky tasks](#tip-19-isolated-environments-for-long-running-risky-tasks)
 - [Tip 20: The best way to get better at using Claude Code is by using it](#tip-20-the-best-way-to-get-better-at-using-claude-code-is-by-using-it)
-- [Tip 21: Clone/fork and half-clone conversations](#tip-21-clonefork-and-half-clone-conversations)
+- [Tip 21: Fork and half-clone conversations](#tip-21-fork-and-half-clone-conversations)
 - [Tip 22: Use realpath to get absolute paths](#tip-22-use-realpath-to-get-absolute-paths)
 - [Tip 23: Understanding CLAUDE.md vs Skills vs Slash Commands vs Plugins](#tip-23-understanding-claudemd-vs-skills-vs-slash-commands-vs-plugins)
 - [Tip 24: Interactive PR reviews](#tip-24-interactive-pr-reviews)
@@ -549,11 +549,9 @@ That's how I feel about this too. Of course, there are supplementary things you 
 
 I like to think of it like a billion token rule instead of the 10,000 hour rule. If you want to get better at AI and truly get a good intuition about how it works, the best way is to consume a lot of tokens. And nowadays it's possible. I found that especially with Opus 4.5, it's powerful enough but affordable enough that you can run multiple sessions at the same time. You don't have to worry as much about token usage, which frees you up a lot.
 
-## Tip 21: Clone/fork and half-clone conversations
+## Tip 21: Fork and half-clone conversations
 
-Sometimes you want to try a different approach from a specific point in a conversation without losing your original thread. The [clone-conversation script](scripts/clone-conversation.sh) lets you duplicate a conversation with new UUIDs so you can branch off.
-
-**Built-in alternatives (recent versions):** Claude Code now has native forking:
+Sometimes you want to try a different approach from a specific point in a conversation without losing your original thread. Claude Code has native forking:
 - `/branch` - branches the current session from within a conversation
 - `--fork-session` - use with `--resume` or `--continue` (e.g., `claude -c --fork-session`)
 
@@ -574,22 +572,6 @@ claude() {
 ```
 
 This intercepts all `claude` commands, expands `--fs` to `--fork-session`, and passes everything else through unchanged. Works with aliases too (see [Tip 7](#tip-7-set-up-terminal-aliases-for-quick-access)): `c -c --fs`, `ch -c --fs`, etc.
-
-The clone script below predates these built-in options, but the half-clone script below that remains unique for reducing context.
-
-The first message is tagged with `[CLONED <timestamp>]` (e.g., `[CLONED Jan 7 14:30]`), which shows up both in the `claude -r` list and inside the conversation.
-
-To set it up manually, symlink both files:
-```bash
-ln -s /path/to/this/repo/scripts/clone-conversation.sh ~/.claude/scripts/clone-conversation.sh
-ln -s /path/to/this/repo/skills/clone ~/.claude/skills/clone
-```
-
-Or install via the [dx plugin](#tip-43-install-the-dx-plugin) - no symlinks needed.
-
-Then just type `/clone` (or `/dx:clone` if using the plugin) in any conversation and Claude will handle finding the session ID and running the script.
-
-I've tested this extensively and the cloning works really well.
 
 ### Half-clone to reduce context
 
@@ -633,9 +615,9 @@ Then add the hook to your `~/.claude/settings.json`:
 
 This requires auto-compact to be disabled (`/config` > Auto-compact > false), otherwise Claude Code may compact the context before the hook gets a chance to fire. When triggered, the hook blocks Claude from stopping and tells it to run `/half-clone`. The advantage over auto-compact is that half-clone is deterministic and fast - it keeps your actual messages intact instead of summarizing them.
 
-### Recommended permission for clone scripts
+### Recommended permission for the half-clone script
 
-Both clone scripts need to read `~/.claude` (for conversation files and history). To avoid permission prompts from any project, add this to your global settings (`~/.claude/settings.json`):
+The half-clone script needs to read `~/.claude` (for conversation files and history). To avoid permission prompts from any project, add this to your global settings (`~/.claude/settings.json`):
 ```json
 {
   "permissions": {
@@ -666,7 +648,7 @@ Skills and slash commands are pretty similar in the way they function. The diffe
 
 **Plugins** are a way to package skills, slash commands, agents, hooks, and MCP servers together. But a plugin doesn't have to use all of them. Anthropic's official `frontend-design` plugin is essentially just a skill and nothing else. It could be distributed as a standalone skill, but the plugin format makes it easier to install.
 
-For example, I built a plugin called `dx` that bundles slash commands and a skill from this repo together. You can see how it works in the [Install the dx plugin](#tip-43-install-the-dx-plugin) section.
+For example, I built a plugin called `dx` that bundles skills from this repo together. You can see how it works in the [Install the dx plugin](#tip-43-install-the-dx-plugin) section.
 
 ## Tip 24: Interactive PR reviews
 
@@ -917,12 +899,12 @@ This repo is also a Claude Code plugin called `dx` (developer experience). It bu
 |-------|-------------|
 | `/dx:gha <url>` | Analyze GitHub Actions failures (Tip 27) |
 | `/dx:handoff` | Create handoff documents for context continuity (Tip 8) |
-| `/dx:clone` | Clone conversations to branch off (Tip 21) |
 | `/dx:half-clone` | Half-clone to reduce context (Tip 21) |
 | `/dx:reddit-fetch` | Fetch Reddit content via Reddit's JSON API |
 | `/dx:review-claudemd` | Review conversations to improve CLAUDE.md files (Tip 28) |
 | `/dx:hn-summarize` | Summarize Hacker News top stories, articles, and comment threads |
 | `/dx:version-check` | Recommend which Claude Code version to run, or whether to update |
+| `/dx:private-github-search` | Full-text search across all your GitHub repos, including private ones |
 
 **Install with two commands:**
 
@@ -931,7 +913,7 @@ claude plugin marketplace add ykdojo/claude-code-tips
 claude plugin install dx@ykdojo
 ```
 
-After installing, the commands are available as `/dx:clone`, `/dx:half-clone`, `/dx:handoff`, and `/dx:gha`. The `reddit-fetch` skill is invoked automatically when you ask about Reddit URLs. The `review-claudemd` skill analyzes your recent conversations and suggests improvements for your CLAUDE.md files. For the clone commands, see the [recommended permission](#recommended-permission-for-clone-scripts).
+After installing, the commands are available as `/dx:half-clone`, `/dx:handoff`, and `/dx:gha`. The `reddit-fetch` skill is invoked automatically when you ask about Reddit URLs. The `review-claudemd` skill analyzes your recent conversations and suggests improvements for your CLAUDE.md files. For the half-clone command, see the [recommended permission](#recommended-permission-for-the-half-clone-script).
 
 **Recommended companion:** [Playwright MCP](https://github.com/microsoft/playwright-mcp) for browser automation - add with `claude mcp add -s user playwright npx @playwright/mcp@latest`
 
@@ -947,13 +929,13 @@ The script shows you everything it will configure and lets you skip any items:
 
 ```
 INSTALLS:
-  1. DX plugin - slash commands (/dx:gha, /dx:clone, /dx:handoff) and skills (reddit-fetch)
+  1. DX plugin - skills like /dx:gha, /dx:handoff, and reddit-fetch
 
 SETTINGS (~/.claude/settings.json):
   2. Status line - shows model, git branch, uncommitted files, token usage at bottom of screen
   3. Disable auto-updates - prevents Claude Code from auto-updating
   4. Lazy-load MCP tools - only loads MCP tool definitions when needed, saves context
-  5. Read(~/.claude) permission - allows clone/half-clone commands to read conversation history
+  5. Read(~/.claude) permission - allows the half-clone command to read conversation history
   6. Read(//tmp/**) permission - allows reading temporary files without prompts
   7. Disable attribution - removes Co-Authored-By from commits and attribution from PRs
 
