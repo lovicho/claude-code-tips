@@ -726,6 +726,8 @@ Or start a server with `claude remote-control --spawn=worktree --capacity=N`, wh
 
 Personally I prefer the `/rc` method, and I turn it off when I'm not using it. A potential attacker who gets access to your Claude Code session essentially has access to everything on your computer, so I'd rather be careful. The exception is when I have a totally [isolated environment](#tip-19-isolated-environments-for-long-running-risky-tasks) - then it's super convenient to be able to start a Claude Code session from anywhere from your phone, with access to your full dev environment.
 
+One thing to watch out for: if "Enable Remote Control for all sessions" is unset, it could be enabled automatically for every new session. Set it to false explicitly if you don't want that, either through `/config` or with `"remoteControlAtStartup": false` in `~/.claude/settings.json`.
+
 Docs: [Remote Control](https://code.claude.com/docs/en/remote-control).
 
 ## Tip 33: Write lots of tests (and use TDD)
