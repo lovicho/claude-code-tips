@@ -575,12 +575,13 @@ This intercepts all `claude` commands, expands `--fs` to `--fork-session`, and p
 
 ### Half-clone to reduce context
 
-When a conversation gets too long, the [half-clone-conversation script](scripts/half-clone-conversation.sh) keeps only the later half. This reduces token usage while preserving your recent work. The first message is tagged with `[HALF-CLONE <timestamp>]` (e.g., `[HALF-CLONE Jan 7 14:30]`).
+When a conversation gets too long, the [half-clone-conversation script](scripts/half-clone-conversation.sh) keeps only the later half. This reduces token usage while preserving your recent work. The first message is tagged with `[HALF-CLONE <timestamp>]` (e.g., `[HALF-CLONE Jan 7 14:30]`). There's also a quarter-clone variant (`--quarter`, or the `quarter-clone` skill) that keeps only the last quarter, tagged with `[QUARTER-CLONE <timestamp>]` - useful when even half is too much.
 
-To set it up manually, symlink both files:
+To set it up manually, symlink the script and skills:
 ```bash
 ln -s /path/to/this/repo/scripts/half-clone-conversation.sh ~/.claude/scripts/half-clone-conversation.sh
 ln -s /path/to/this/repo/skills/half-clone ~/.claude/skills/half-clone
+ln -s /path/to/this/repo/skills/quarter-clone ~/.claude/skills/quarter-clone
 ```
 
 Or install via the [dx plugin](#tip-43-install-the-dx-plugin) - no symlinks needed.
@@ -902,6 +903,7 @@ This repo is also a Claude Code plugin called `dx` (developer experience). It bu
 | `/dx:gha <url>` | Analyze GitHub Actions failures (Tip 27) |
 | `/dx:handoff` | Create handoff documents for context continuity (Tip 8) |
 | `/dx:half-clone` | Half-clone to reduce context (Tip 21) |
+| `/dx:quarter-clone` | Quarter-clone to reduce context even more (Tip 21) |
 | `/dx:reddit-fetch` | Fetch Reddit content via Reddit's JSON API |
 | `/dx:review-claudemd` | Review conversations to improve CLAUDE.md files (Tip 28) |
 | `/dx:hn-summarize` | Summarize Hacker News top stories, articles, and comment threads |
