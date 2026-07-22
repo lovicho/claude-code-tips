@@ -33,6 +33,7 @@ KEEP_DENOM=2
 CLONE_LABEL="HALF-CLONE"
 MODE_NAME="half-clone"
 KEPT_DESC="later half"
+FALLBACK_DISPLAY="[Half-cloned conversation]"
 
 # Colors for output
 RED='\033[0;31m'
@@ -524,14 +525,14 @@ half_clone_conversation() {
     display_text=$(tail -n +"$((skip_count + 1))" "$source_file" | filter_clean_user_msgs | \
         grep -oE '"content":"[^"]*"' | head -1 | \
         LC_ALL=C sed 's/"content":"//;s/"$//' | \
-        head -c 200 || echo "[Cloned conversation]")
+        head -c 200 || echo "$FALLBACK_DISPLAY")
 
     if [ -z "$display_text" ]; then
         # Try array format
         display_text=$(tail -n +"$((skip_count + 1))" "$source_file" | filter_clean_user_msgs | \
             grep -oE '"text":"[^"]*"' | head -1 | \
             LC_ALL=C sed 's/"text":"//;s/"$//' | \
-            head -c 200 || echo "[Cloned conversation]")
+            head -c 200 || echo "$FALLBACK_DISPLAY")
     fi
 
     display_text="${clone_tag} ${display_text}"
@@ -579,6 +580,7 @@ while [ $# -gt 0 ]; do
             CLONE_LABEL="QUARTER-CLONE"
             MODE_NAME="quarter-clone"
             KEPT_DESC="last quarter"
+            FALLBACK_DISPLAY="[Quarter-cloned conversation]"
             shift
             ;;
         *)
