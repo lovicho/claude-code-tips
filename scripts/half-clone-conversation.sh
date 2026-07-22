@@ -1,22 +1,24 @@
 #!/usr/bin/env bash
 #
-# half-clone-conversation.sh - Clone the later half of a Claude Code conversation
+# half-clone-conversation.sh - Clone the later half (or quarter) of a Claude Code conversation
 #
 # Pure bash implementation - no Python/Node dependencies.
 # Works on macOS (bash 3.2+) and Linux.
 #
 # Usage:
-#   half-clone-conversation.sh <session-id> [project-path]
+#   half-clone-conversation.sh [--quarter] <session-id> [project-path]
 #
 # Arguments:
+#   --quarter     Keep only the last quarter instead of the later half
 #   session-id    The UUID of the conversation to clone (required)
 #   project-path  The project path (default: current directory)
 #
 # Example:
 #   half-clone-conversation.sh d96c899d-7501-4e81-a31b-e0095bb3b501
+#   half-clone-conversation.sh --quarter d96c899d-7501-4e81-a31b-e0095bb3b501
 #   half-clone-conversation.sh d96c899d-7501-4e81-a31b-e0095bb3b501 /home/user/myproject
 #
-# After cloning, use 'claude -r' to see both the original and half-cloned conversation.
+# After cloning, use 'claude -r' to see both the original and cloned conversation.
 #
 
 set -euo pipefail
@@ -25,6 +27,13 @@ CLAUDE_DIR="${HOME}/.claude"
 PROJECTS_DIR="${CLAUDE_DIR}/projects"
 HISTORY_FILE="${CLAUDE_DIR}/history.jsonl"
 TODOS_DIR="${CLAUDE_DIR}/todos"
+
+# Clone mode - defaults to half; --quarter switches to keeping the last quarter
+KEEP_DENOM=2
+CLONE_LABEL="HALF-CLONE"
+MODE_NAME="half-clone"
+KEPT_DESC="later half"
+FALLBACK_DISPLAY="[Half-cloned conversation]"
 
 # Colors for output
 RED='\033[0;31m'
@@ -39,9 +48,10 @@ log_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
 log_error() { echo -e "${RED}[ERROR]${NC} $1" >&2; }
 
 usage() {
-    echo "Usage: $0 <session-id> [project-path]"
+    echo "Usage: $0 [--quarter] <session-id> [project-path]"
     echo ""
     echo "Arguments:"
+    echo "  --quarter     Keep only the last quarter instead of the later half"
     echo "  session-id    The UUID of the conversation to clone (required)"
     echo "  project-path  The project path (default: current directory)"
     exit 1
@@ -184,7 +194,7 @@ half_clone_conversation() {
     # Generate timestamp for clone tag (e.g., "Jan 7 14:30")
     local clone_timestamp
     clone_timestamp=$(date "+%b %-d %H:%M")
-    local clone_tag="[HALF-CLONE ${clone_timestamp}]"
+    local clone_tag="[${CLONE_LABEL} ${clone_timestamp}]"
 
     # Find source file
     local source_file
@@ -215,13 +225,14 @@ half_clone_conversation() {
     log_info "Total clean user messages in conversation: $total_clean_user_messages"
 
     if [ "$total_clean_user_messages" -lt 2 ]; then
-        log_error "Conversation has fewer than 2 clean user messages, nothing to half-clone"
+        log_error "Conversation has fewer than 2 clean user messages, nothing to ${MODE_NAME}"
         exit 1
     fi
 
-    # Calculate which clean user message to start from (halfway point)
+    # Calculate which clean user message to start from
+    # (half: skip 1/2; quarter: skip 3/4)
     local skip_clean_count
-    skip_clean_count=$((total_clean_user_messages / 2))
+    skip_clean_count=$((total_clean_user_messages * (KEEP_DENOM - 1) / KEEP_DENOM))
     local keep_clean_count
     keep_clean_count=$((total_clean_user_messages - skip_clean_count))
 
@@ -249,7 +260,7 @@ half_clone_conversation() {
     local target_file="${project_dir}/${new_session}.jsonl"
 
     mkdir -p "$project_dir"
-    log_info "Half-cloning conversation to: $target_file"
+    log_info "Cloning ${KEPT_DESC} of conversation to: $target_file"
 
     # OPTIMIZED First pass: find if last clean user message is a clone/half-clone command
     # Use grep -n to find all user messages in a single pass, then filter
@@ -268,7 +279,7 @@ half_clone_conversation() {
         last_clean_user_line=$(echo "$last_line_info" | cut -d: -f1)
 
         # Check if it's a clone command
-        if echo "$last_line_info" | grep -qE '<command-message>(dx:)?clone</command-message>|<command-message>(dx:)?half-clone</command-message>' 2>/dev/null; then
+        if echo "$last_line_info" | grep -qE '<command-message>(dx:)?(half-clone|quarter-clone|clone)</command-message>' 2>/dev/null; then
             last_clone_cmd_line=$last_clean_user_line
         fi
     fi
@@ -304,7 +315,8 @@ half_clone_conversation() {
          -v new_session="$new_session" \
          -v clone_tag="$clone_tag" \
          -v uuid_file="$uuid_file" \
-         -v marker_uuid="$marker_uuid" '
+         -v marker_uuid="$marker_uuid" \
+         -v keep_denom="$KEEP_DENOM" '
     BEGIN {
         first_message = 1
         first_user = 1
@@ -387,14 +399,14 @@ half_clone_conversation() {
         return ""
     }
 
-    function halve_number(line, field,    pattern, num, halved) {
+    function divide_number(line, field,    pattern, num, divided) {
         pattern = "\"" field "\":[0-9]+"
         if (match(line, pattern)) {
             match_str = substr(line, RSTART, RLENGTH)
             gsub("\"" field "\":", "", match_str)
             num = int(match_str)
-            halved = int(num / 2)
-            gsub("\"" field "\":" num, "\"" field "\":" halved, line)
+            divided = int(num / keep_denom)
+            gsub("\"" field "\":" num, "\"" field "\":" divided, line)
         }
         return line
     }
@@ -466,10 +478,10 @@ half_clone_conversation() {
             }
         }
 
-        # Halve token counts
-        line = halve_number(line, "input_tokens")
-        line = halve_number(line, "cache_read_input_tokens")
-        line = halve_number(line, "cache_creation_input_tokens")
+        # Scale down token counts (divide by 2 for half, 4 for quarter)
+        line = divide_number(line, "input_tokens")
+        line = divide_number(line, "cache_read_input_tokens")
+        line = divide_number(line, "cache_creation_input_tokens")
 
         # Strip thinking blocks
         line = strip_thinking(line)
@@ -492,7 +504,7 @@ half_clone_conversation() {
     ref_uuid=$(generate_uuid)
     local ref_timestamp
     ref_timestamp=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
-    local ref_text="The half-clone is complete. This conversation now only contains the later half of the original - earlier context was removed to free up space. Just continue working from where you left off. Original session: \`${source_session}\` at: ${source_file}"
+    local ref_text="The ${MODE_NAME} is complete. This conversation now only contains the ${KEPT_DESC} of the original - earlier context was removed to free up space. Just continue working from where you left off. Original session: \`${source_session}\` at: ${source_file}"
     echo "{\"parentUuid\":\"${last_uuid}\",\"isSidechain\":false,\"userType\":\"external\",\"sessionId\":\"${new_session}\",\"type\":\"assistant\",\"message\":{\"role\":\"assistant\",\"content\":[{\"type\":\"text\",\"text\":\"${ref_text}\"}]},\"uuid\":\"${ref_uuid}\",\"timestamp\":\"${ref_timestamp}\",\"isMeta\":true}" >> "$target_file"
 
     local output_line_count
@@ -513,14 +525,14 @@ half_clone_conversation() {
     display_text=$(tail -n +"$((skip_count + 1))" "$source_file" | filter_clean_user_msgs | \
         grep -oE '"content":"[^"]*"' | head -1 | \
         LC_ALL=C sed 's/"content":"//;s/"$//' | \
-        head -c 200 || echo "[Half-cloned conversation]")
+        head -c 200 || echo "$FALLBACK_DISPLAY")
 
     if [ -z "$display_text" ]; then
         # Try array format
         display_text=$(tail -n +"$((skip_count + 1))" "$source_file" | filter_clean_user_msgs | \
             grep -oE '"text":"[^"]*"' | head -1 | \
             LC_ALL=C sed 's/"text":"//;s/"$//' | \
-            head -c 200 || echo "[Half-cloned conversation]")
+            head -c 200 || echo "$FALLBACK_DISPLAY")
     fi
 
     display_text="${clone_tag} ${display_text}"
@@ -540,16 +552,16 @@ half_clone_conversation() {
     echo "{\"display\":\"${display_text}\",\"pastedContents\":{},\"timestamp\":${timestamp},\"project\":\"${project_path}\",\"sessionId\":\"${new_session}\"}" >> "$HISTORY_FILE"
     log_success "History entry added"
 
-    # Note: We don't copy todos for half-clone since the context is truncated
+    # Note: We don't copy todos since the context is truncated
 
-    log_success "Conversation half-cloned successfully!"
+    log_success "Conversation ${MODE_NAME}d successfully!"
     echo ""
     echo "Original session: $source_session"
     echo "New session:      $new_session"
     echo "Project:          $project_path"
     echo "Clean user msgs:  $keep_clean_count of $total_clean_user_messages (skipped first $skip_clean_count)"
     echo ""
-    echo "To resume the half-cloned conversation, use:"
+    echo "To resume the cloned conversation, use:"
     echo "  claude -r"
     echo ""
     echo "Then select the conversation marked with ${clone_tag}"
@@ -557,10 +569,25 @@ half_clone_conversation() {
 
 # Main
 PREVIEW_MODE=false
-if [ "${1:-}" = "--preview" ]; then
-    PREVIEW_MODE=true
-    shift
-fi
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --preview)
+            PREVIEW_MODE=true
+            shift
+            ;;
+        --quarter)
+            KEEP_DENOM=4
+            CLONE_LABEL="QUARTER-CLONE"
+            MODE_NAME="quarter-clone"
+            KEPT_DESC="last quarter"
+            FALLBACK_DISPLAY="[Quarter-cloned conversation]"
+            shift
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
 
 if [ $# -lt 1 ]; then
     usage

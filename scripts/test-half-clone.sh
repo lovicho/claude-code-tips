@@ -93,8 +93,9 @@ create_test_conversation() {
 
 run_half_clone() {
     local session_id="$1"
-    # Override HOME to use test directory
-    HOME="$TEST_DIR" "$HALF_CLONE_SCRIPT" "$session_id" "$TEST_PROJECT_PATH" 2>&1
+    shift
+    # Override HOME to use test directory; extra flags (e.g. --quarter) go before the session id
+    HOME="$TEST_DIR" "$HALF_CLONE_SCRIPT" "$@" "$session_id" "$TEST_PROJECT_PATH" 2>&1
 }
 
 count_messages() {
@@ -510,6 +511,169 @@ test_session_config_lines_stripped() {
     fi
 }
 
+# Test 13: Quarter mode - 8 messages (4 clean user): skip 3, keep 1
+# Output: marker(1) + kept lines 7-8(2) + reference(1) = 4
+test_quarter_eight_messages() {
+    log_test "Quarter: 8 messages (4 clean user): should produce 1 marker + 2 kept + 1 reference = 4"
+
+    local session_id
+    session_id=$(create_test_conversation 8)
+    local output
+    output=$(run_half_clone "$session_id" --quarter)
+
+    local new_session
+    new_session=$(get_new_session_from_output "$output")
+    local new_file="${TEST_PROJECTS_DIR}/${TEST_PROJECT_DIRNAME}/${new_session}.jsonl"
+
+    if [ ! -f "$new_file" ]; then
+        log_fail "Output file not created"
+        return
+    fi
+
+    local count
+    count=$(count_messages "$new_file")
+    if [ "$count" -eq 4 ]; then
+        log_pass "Kept 4 messages (marker + 2 kept + reference)"
+    else
+        log_fail "Expected 4 messages, got $count"
+    fi
+
+    # The kept user message should be the LAST user message (message 7)
+    if grep -q "User message 7" "$new_file"; then
+        log_pass "Kept the last quarter (User message 7 present)"
+    else
+        log_fail "User message 7 not found in quarter clone"
+    fi
+    ((++TESTS_RUN)) || true
+}
+
+# Test 14: Quarter mode - [QUARTER-CLONE <timestamp>] tag in file and history
+test_quarter_tag() {
+    log_test "Quarter: [QUARTER-CLONE <timestamp>] tag should be in first user message and history"
+
+    local session_id
+    session_id=$(create_test_conversation 8)
+    local output
+    output=$(run_half_clone "$session_id" --quarter)
+
+    local new_session
+    new_session=$(get_new_session_from_output "$output")
+    local new_file="${TEST_PROJECTS_DIR}/${TEST_PROJECT_DIRNAME}/${new_session}.jsonl"
+
+    if grep -qE '\[QUARTER-CLONE [A-Z][a-z]+ [0-9]+ [0-9]+:[0-9]+\]' "$new_file"; then
+        log_pass "[QUARTER-CLONE <timestamp>] tag found in clone"
+    else
+        log_fail "[QUARTER-CLONE <timestamp>] tag not found in clone"
+    fi
+
+    ((++TESTS_RUN)) || true
+    if grep -qE '\[QUARTER-CLONE [A-Z][a-z]+ [0-9]+ [0-9]+:[0-9]+\]' "${TEST_CLAUDE_DIR}/history.jsonl"; then
+        log_pass "[QUARTER-CLONE <timestamp>] tag found in history"
+    else
+        log_fail "[QUARTER-CLONE <timestamp>] tag not found in history"
+    fi
+}
+
+# Test 15: Quarter mode - token counts divided by 4
+test_quarter_token_division() {
+    log_test "Quarter: token counts should be divided by 4"
+
+    local session_id
+    session_id=$(uuidgen | tr '[:upper:]' '[:lower:]')
+    local conv_file="${TEST_PROJECTS_DIR}/${TEST_PROJECT_DIRNAME}/${session_id}.jsonl"
+
+    local uuid1 uuid2 uuid3 uuid4
+    uuid1=$(uuidgen | tr '[:upper:]' '[:lower:]')
+    uuid2=$(uuidgen | tr '[:upper:]' '[:lower:]')
+    uuid3=$(uuidgen | tr '[:upper:]' '[:lower:]')
+    uuid4=$(uuidgen | tr '[:upper:]' '[:lower:]')
+
+    # 4 messages (2 clean user). Quarter skips 1, keeps 1 - lines 3-4 are kept.
+    # The kept assistant message carries usage numbers divisible by 4.
+    {
+        echo "{\"parentUuid\":null,\"sessionId\":\"${session_id}\",\"type\":\"user\",\"message\":{\"role\":\"user\",\"content\":\"Question 1\"},\"uuid\":\"${uuid1}\",\"timestamp\":\"2025-01-01T00:00:00.000Z\"}"
+        echo "{\"parentUuid\":\"${uuid1}\",\"sessionId\":\"${session_id}\",\"type\":\"assistant\",\"message\":{\"role\":\"assistant\",\"content\":[{\"type\":\"text\",\"text\":\"Answer 1\"}],\"usage\":{\"input_tokens\":100,\"cache_read_input_tokens\":200,\"cache_creation_input_tokens\":300}},\"uuid\":\"${uuid2}\",\"timestamp\":\"2025-01-01T00:00:00.000Z\"}"
+        echo "{\"parentUuid\":\"${uuid2}\",\"sessionId\":\"${session_id}\",\"type\":\"user\",\"message\":{\"role\":\"user\",\"content\":\"Question 2\"},\"uuid\":\"${uuid3}\",\"timestamp\":\"2025-01-01T00:00:00.000Z\"}"
+        echo "{\"parentUuid\":\"${uuid3}\",\"sessionId\":\"${session_id}\",\"type\":\"assistant\",\"message\":{\"role\":\"assistant\",\"content\":[{\"type\":\"text\",\"text\":\"Answer 2\"}],\"usage\":{\"input_tokens\":400,\"cache_read_input_tokens\":800,\"cache_creation_input_tokens\":1200}},\"uuid\":\"${uuid4}\",\"timestamp\":\"2025-01-01T00:00:00.000Z\"}"
+    } > "$conv_file"
+
+    local output
+    output=$(run_half_clone "$session_id" --quarter)
+
+    local new_session
+    new_session=$(get_new_session_from_output "$output")
+    local new_file="${TEST_PROJECTS_DIR}/${TEST_PROJECT_DIRNAME}/${new_session}.jsonl"
+
+    if grep -q '"input_tokens":100' "$new_file" && \
+       grep -q '"cache_read_input_tokens":200' "$new_file" && \
+       grep -q '"cache_creation_input_tokens":300' "$new_file"; then
+        log_pass "Token counts divided by 4 (400->100, 800->200, 1200->300)"
+    else
+        log_fail "Token counts not divided by 4"
+        grep -o '"usage":{[^}]*}' "$new_file" || true
+    fi
+}
+
+# Test 16: Half mode still halves token counts (regression check for divide_number)
+test_half_token_division() {
+    log_test "Half: token counts should still be divided by 2"
+
+    local session_id
+    session_id=$(uuidgen | tr '[:upper:]' '[:lower:]')
+    local conv_file="${TEST_PROJECTS_DIR}/${TEST_PROJECT_DIRNAME}/${session_id}.jsonl"
+
+    local uuid1 uuid2 uuid3 uuid4
+    uuid1=$(uuidgen | tr '[:upper:]' '[:lower:]')
+    uuid2=$(uuidgen | tr '[:upper:]' '[:lower:]')
+    uuid3=$(uuidgen | tr '[:upper:]' '[:lower:]')
+    uuid4=$(uuidgen | tr '[:upper:]' '[:lower:]')
+
+    {
+        echo "{\"parentUuid\":null,\"sessionId\":\"${session_id}\",\"type\":\"user\",\"message\":{\"role\":\"user\",\"content\":\"Question 1\"},\"uuid\":\"${uuid1}\",\"timestamp\":\"2025-01-01T00:00:00.000Z\"}"
+        echo "{\"parentUuid\":\"${uuid1}\",\"sessionId\":\"${session_id}\",\"type\":\"assistant\",\"message\":{\"role\":\"assistant\",\"content\":[{\"type\":\"text\",\"text\":\"Answer 1\"}]},\"uuid\":\"${uuid2}\",\"timestamp\":\"2025-01-01T00:00:00.000Z\"}"
+        echo "{\"parentUuid\":\"${uuid2}\",\"sessionId\":\"${session_id}\",\"type\":\"user\",\"message\":{\"role\":\"user\",\"content\":\"Question 2\"},\"uuid\":\"${uuid3}\",\"timestamp\":\"2025-01-01T00:00:00.000Z\"}"
+        echo "{\"parentUuid\":\"${uuid3}\",\"sessionId\":\"${session_id}\",\"type\":\"assistant\",\"message\":{\"role\":\"assistant\",\"content\":[{\"type\":\"text\",\"text\":\"Answer 2\"}],\"usage\":{\"input_tokens\":400,\"cache_read_input_tokens\":800,\"cache_creation_input_tokens\":1200}},\"uuid\":\"${uuid4}\",\"timestamp\":\"2025-01-01T00:00:00.000Z\"}"
+    } > "$conv_file"
+
+    local output
+    output=$(run_half_clone "$session_id")
+
+    local new_session
+    new_session=$(get_new_session_from_output "$output")
+    local new_file="${TEST_PROJECTS_DIR}/${TEST_PROJECT_DIRNAME}/${new_session}.jsonl"
+
+    if grep -q '"input_tokens":200' "$new_file" && \
+       grep -q '"cache_read_input_tokens":400' "$new_file" && \
+       grep -q '"cache_creation_input_tokens":600' "$new_file"; then
+        log_pass "Token counts divided by 2 (400->200, 800->400, 1200->600)"
+    else
+        log_fail "Token counts not divided by 2"
+        grep -o '"usage":{[^}]*}' "$new_file" || true
+    fi
+}
+
+# Test 17: Quarter mode - minimum conversation (2 clean user msgs) still works
+test_quarter_minimum_messages() {
+    log_test "Quarter: 4 messages (2 clean user): should skip 1, keep 1"
+
+    local session_id
+    session_id=$(create_test_conversation 4)
+    local output
+    output=$(run_half_clone "$session_id" --quarter)
+
+    local new_session
+    new_session=$(get_new_session_from_output "$output")
+    local new_file="${TEST_PROJECTS_DIR}/${TEST_PROJECT_DIRNAME}/${new_session}.jsonl"
+
+    local count
+    count=$(count_messages "$new_file")
+    if [ "$count" -eq 4 ]; then
+        log_pass "Kept 4 messages (marker + 2 kept + reference)"
+    else
+        log_fail "Expected 4 messages, got $count"
+    fi
+}
+
 # Main
 main() {
     echo "================================"
@@ -537,6 +701,11 @@ main() {
     test_thinking_blocks_stripped
     test_progress_with_nested_user_type
     test_session_config_lines_stripped
+    test_quarter_eight_messages
+    test_quarter_tag
+    test_quarter_token_division
+    test_half_token_division
+    test_quarter_minimum_messages
 
     echo ""
     echo "================================"
