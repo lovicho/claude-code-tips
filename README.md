@@ -716,6 +716,16 @@ Auto mode lets Claude decide whether a command is safe to run in context, instea
 
 The main thing it fixes is mindless approving. When a command is too long to read carefully, or you're getting tired, you end up approving things without really thinking about them. Auto mode takes that pressure off, so I think it's a good default.
 
+To make it the default, add this to `~/.claude/settings.json`:
+
+```json
+{
+  "permissions": {
+    "defaultMode": "auto"
+  }
+}
+```
+
 If you still want to be careful, you can always approve things manually without auto mode. And if you want to give it complete independence, you can [run Claude Code in a container with `--dangerously-skip-permissions`](#tip-19-isolated-environments-for-long-running-risky-tasks).
 
 ## Tip 32: Control Claude Code from your phone
@@ -836,7 +846,7 @@ Or in `~/.claude/settings.json` (requires restart):
 
 **Entering newlines (multi-line input):**
 
-The quickest method works everywhere without any setup: type `\` followed by Enter to create a newline. For keyboard shortcuts, run `/terminal-setup` in Claude Code. On Mac Terminal.app, I use Option+Enter.
+The quickest method works everywhere without any setup: type `\` followed by Enter to create a newline. For keyboard shortcuts, run `/terminal-setup` in Claude Code. On Mac Terminal.app, I use Option+Enter - it only works after checking "Use Option as Meta key" in Terminal → Settings → Profiles → Keyboard.
 
 **Pasting images:**
 - `Ctrl+V` (Mac/Linux) or `Alt+V` (Windows) - Paste an image from your clipboard
