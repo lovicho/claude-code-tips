@@ -27,7 +27,7 @@ Here are my tips for getting the most out of Claude Code, including a custom sta
 - [Tip 15: Manual exponential backoff for long-running jobs](#tip-15-manual-exponential-backoff-for-long-running-jobs)
 - [Tip 16: Claude Code as a writing assistant](#tip-16-claude-code-as-a-writing-assistant)
 - [Tip 17: Markdown is the s**t](#tip-17-markdown-is-the-st)
-- [Tip 18: Use Notion to preserve links when pasting](#tip-18-use-notion-to-preserve-links-when-pasting)
+- [Tip 18: Preserve links when pasting](#tip-18-preserve-links-when-pasting)
 - [Tip 19: Isolated environments for long-running risky tasks](#tip-19-isolated-environments-for-long-running-risky-tasks)
 - [Tip 20: The best way to get better at using Claude Code is by using it](#tip-20-the-best-way-to-get-better-at-using-claude-code-is-by-using-it)
 - [Tip 21: Fork and half-clone conversations](#tip-21-fork-and-half-clone-conversations)
@@ -512,9 +512,11 @@ Markdown was already pretty good even before AI, but with Claude Code in particu
 
 A quick tip for this one: if you want to copy and paste markdown content into a platform that doesn't accept it easily, you can paste it into a fresh Notion file first, then copy from Notion into the other platform. Notion converts it to a format that other platforms can accept. If regular pasting doesn't work, try Command + Shift + V to paste without formatting.
 
-## Tip 18: Use Notion to preserve links when pasting
+## Tip 18: Preserve links when pasting
 
 It turns out the reverse also works. If you have text with links from other places, let's say from Slack, you can copy it. If you paste it directly into Claude Code, it doesn't show the links. But if you put it in a Notion document first, then copy from there, you get it in markdown, which of course Claude Code can read.
+
+Alternatively, you can just ask Claude Code to read your clipboard. It normally knows exactly what command to use - on Mac, that's `pbpaste` - and it's able to use that command to fetch the content without changing the formatting.
 
 ## Tip 19: Isolated environments for long-running risky tasks
 
@@ -727,6 +729,8 @@ To make it the default, add this to `~/.claude/settings.json`:
 ```
 
 If you still want to be careful, you can always approve things manually without auto mode. And if you want to give it complete independence, you can [run Claude Code in a container with `--dangerously-skip-permissions`](#tip-19-isolated-environments-for-long-running-risky-tasks).
+
+Note that auto mode is now [the default option](https://code.claude.com/docs/en/permission-modes) on Pro, Max, and Team plans.
 
 ## Tip 32: Control Claude Code from your phone
 
