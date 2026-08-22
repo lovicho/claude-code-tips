@@ -1,4 +1,4 @@
-# 40+ Claude Code Tips: From Basics to Advanced
+# 45+ Claude Code Tips: From Basics to Advanced
 
 Here are my tips for getting the most out of Claude Code, including a custom status line script and Claude Code running itself in a container. Also includes the [dx plugin](#tip-44-install-the-dx-plugin): skills for everyday dev workflows.
 
@@ -56,6 +56,7 @@ Here are my tips for getting the most out of Claude Code, including a custom sta
 - [Tip 44: Install the dx plugin](#tip-44-install-the-dx-plugin)
 - [Tip 45: Quick setup script](#tip-45-quick-setup-script)
 - [Tip 46: Switch between multiple Claude accounts](#tip-46-switch-between-multiple-claude-accounts)
+- [Tip 47: Use GitHub as your knowledge base](#tip-47-use-github-as-your-knowledge-base)
 
 <!-- /TOC -->
 
@@ -924,11 +925,6 @@ There are several effective ways to keep learning about Claude Code:
 
 **Learn from the community** - The [r/ClaudeAI](https://www.reddit.com/r/ClaudeAI/) subreddit is a great place to learn from other users and see what workflows people are using.
 
-**Follow Ado for tips** - Ado ([@adocomplete](https://x.com/adocomplete)) is a DevRel at Anthropic who posted daily Claude Code tips throughout December 2025 in his "Advent of Claude" series. While this particular series has already ended, he continues to share useful tips on X.
-
-- [Twitter/X: Advent of Claude posts](https://x.com/search?q=from%3Aadocomplete%20advent%20of%20claude&src=typed_query&f=live)
-- [LinkedIn: Advent of Claude posts](https://www.linkedin.com/search/results/content/?fromMember=%5B%22ACoAAAFdD3IBYHwKSh6FsyGqOh1SpbrZ9ZHTjnI%22%5D&keywords=advent%20of%20claude&origin=FACETED_SEARCH&sid=zDV&sortBy=%22date_posted%22)
-
 ## Tip 44: Install the dx plugin
 
 This repo is also a Claude Code plugin called `dx` (developer experience). It bundles several tools from the tips above into a single install:
@@ -1007,6 +1003,14 @@ clp() { CLAUDE_CODE_OAUTH_TOKEN="$(security find-generic-password -s claude-toke
 ```
 
 Now `clw` and `clp` run as each account (e.g. `clw --resume`), while plain `claude` still uses your Keychain login. Tokens last about a year, so re-run `setup-token` to refresh.
+
+## Tip 47: Use GitHub as your knowledge base
+
+I've been using GitHub as my knowledge base - kind of a Notion replacement. Instead of opening up a Notion document, I just create a new repo or find an existing private repo where I can put my notes. I dictate my thoughts and develop my notes there, and if I have some research to do, I let Claude Code do the research and update those repos.
+
+I also have repos for skills. If I have to repeat the same type of work over and over again, it's nice to be able to have that in a skill format so I can reuse those workflows.
+
+The one missing piece is search: GitHub's own search doesn't work well for private repos. I wrote about that problem and how I solved it in [The missing private GitHub search](content/the-missing-private-github-search.md) - it's a [skill](skills/private-github-search/SKILL.md) that mirrors all your repos locally and searches them with ripgrep, so I can just ask Claude Code "which repo has X" and it finds it.
 
 ---
 
