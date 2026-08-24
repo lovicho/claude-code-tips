@@ -57,6 +57,7 @@ Here are my tips for getting the most out of Claude Code, including a custom sta
 - [Tip 45: Quick setup script](#tip-45-quick-setup-script)
 - [Tip 46: Switch between multiple Claude accounts](#tip-46-switch-between-multiple-claude-accounts)
 - [Tip 47: Use GitHub as your knowledge base](#tip-47-use-github-as-your-knowledge-base)
+- [Tip 48: Learn to review code through a TESTING.md document](#tip-48-learn-to-review-code-through-a-testingmd-document)
 
 <!-- /TOC -->
 
@@ -1013,6 +1014,14 @@ I also have repos for skills. If I have to repeat the same type of work over and
 The one missing piece is search: GitHub's own search doesn't work well for private repos. I wrote about that problem and how I solved it in [The missing private GitHub search](content/the-missing-private-github-search.md) - it's a [skill](skills/private-github-search/SKILL.md) that mirrors all your repos locally and searches them with ripgrep, so I can just ask Claude Code "which repo has X" and it finds it.
 
 See: [Why GitHub is the best knowledge base](content/why-github-is-the-best-knowledge-base.md)
+
+## Tip 48: Learn to review code through a TESTING.md document
+
+When you need to review a large amount of code (Claude Code generated code, a PR from your teammate, or an external PR), the real challenge is building a mental model of what's going on. And the question is, how do you know if this is correct? You can read the code. You can write tests. But there is another way that's one level above those.
+
+What I recommend is to have Claude Code test everything in the given code thoroughly, let it document how it tested and verified everything in a TESTING.md document, and review that document manually instead. You can go back and forth on it to get a good format for you to review. If it's too long, ask it to make it shorter. If it's too short, ask for more information. If it has jargon you don't understand, ask it to explain or simplify.
+
+Here is a real example: [TESTING.md](TESTING.md) from reviewing an external PR to this repo, where Claude Code reproduced the bug on a real Windows runner in GitHub Actions, verified the fix, and summarized everything it tested.
 
 ---
 
